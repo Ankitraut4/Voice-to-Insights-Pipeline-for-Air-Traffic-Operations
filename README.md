@@ -17,7 +17,7 @@ The system is implemented as a multi-stage processing pipeline with clear separa
       │
       ▼
 [ Ingestion Layer ]
-  - File / stream input
+  - File/stream input
   - Validation & buffering
       │
       ▼
