@@ -1,27 +1,51 @@
 # 🛫 Voice-to-Insights Pipeline for Air Traffic Operations
 
-##  TABLE OF CONTENTS
-
-- Project Overview
-- Objectives
-- Repository Structure
-- System Architecture
-- Installation
-- Create a Virtual environment and activate it
-- Tech Stack
-- Deliverables
-- Quick Start
-- Dashboard Features
-- License
-
-
 ## 📌 Project Overview
-This project is part of the **GMU DAEN Capstone (Fall 2025)** and focuses on building an **Air Traffic Control (ATC) Voice Communications Dashboard**.  
-The system ingests live or recorded ATC audio, converts it into text using Speech-to-Text (STT) models, applies Natural Language Processing (NLP) for analysis, and visualizes insights in an interactive dashboard.
+A full-stack analytics platform that transforms air traffic control (ATC) voice communications into searchable transcripts and real-time operational insights. The system ingests audio data, processes it through a modular backend pipeline, and presents structured analytics via an interactive dashboard designed for fast operational review and monitoring.
+
+This project emphasizes software engineering fundamentals: clean architecture, modular pipelines, reliability, and end-to-end ownership from ingestion to UI.
 
 <img width="1613" height="812" alt="image" src="https://github.com/user-attachments/assets/f876c232-bd39-477b-ac7d-d5b78e5f695c" />
 
 ---
+
+## Architecture Overview
+
+The system is implemented as a multi-stage processing pipeline with clear separation of concerns:
+
+[ Audio Sources ]
+      │
+      ▼
+[ Ingestion Layer ]
+  - File / stream input
+  - Validation & buffering
+      │
+      ▼
+[ Preprocessing Layer ]
+  - Audio normalization
+  - Segmentation & cleanup
+      │
+      ▼
+[ Transcription Service ]
+  - Pluggable STT backends
+  - Fault-tolerant execution
+      │
+      ▼
+[ Analysis & Categorization ]
+  - Event classification
+  - Pattern & trend extraction
+      │
+      ▼
+[ Data Store ]
+  - Structured transcripts
+  - Aggregated metrics
+      │
+      ▼
+[ Dashboard UI ]
+  - Search & filters
+  - Timelines & analytics
+  - Operational summaries
+
 
 ## 🎯 Objectives
 - Ingest and process **ATC audio recordings** (e.g., LiveATC streams).  
@@ -99,17 +123,6 @@ Dashboard: Streamlit
 Data Handling: Pandas, NumPy
 
 Optional Deployment: Docker (TBD)
-
-
-## 📊 Deliverables
-
-✅ Final Project Report
-
-✅ Capstone Showcase Presentation
-
-✅ GitHub Repository (this repo)
-
-✅ Working Dashboard Prototype
 
 ## 🚀 Quick Start
 
