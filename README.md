@@ -13,38 +13,34 @@ This project emphasizes software engineering fundamentals: clean architecture, m
 
 The system is implemented as a multi-stage processing pipeline with clear separation of concerns:
 
-[ Audio Sources ]
-      │
-      ▼
-[ Ingestion Layer ]
-  - File/stream input
-  - Validation & buffering
-      │
-      ▼
-[ Preprocessing Layer ]
+- Audio Sources
+  - Live or recorded ATC audio inputs
+
+- Ingestion Layer
+  - File and stream ingestion
+  - Input validation and buffering
+
+- Preprocessing Layer
   - Audio normalization
-  - Segmentation & cleanup
-      │
-      ▼
-[ Transcription Service ]
-  - Pluggable STT backends
-  - Fault-tolerant execution
-      │
-      ▼
-[ Analysis & Categorization ]
-  - Event classification
-  - Pattern & trend extraction
-      │
-      ▼
-[ Data Store ]
+  - Segmentation and cleanup
+
+- Transcription Service
+  - Pluggable speech-to-text backends
+  - Fault-tolerant execution and retries
+
+- Analysis & Categorization
+  - Event classification (handoffs, clearances, emergencies)
+  - Pattern and trend extraction
+
+- Data Store
   - Structured transcripts
-  - Aggregated metrics
-      │
-      ▼
-[ Dashboard UI ]
-  - Search & filters
-  - Timelines & analytics
-  - Operational summaries
+  - Aggregated metrics and analytics outputs
+
+- Dashboard UI
+  - Search and filtering
+  - Timelines and analytical views
+  - Operational summaries and insights
+
 
 
 ## 🎯 Objectives
