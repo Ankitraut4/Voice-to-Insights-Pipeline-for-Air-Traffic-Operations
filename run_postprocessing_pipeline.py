@@ -80,7 +80,7 @@ def check_files():
         "src/data/logs/transcripts/categorized_transcription_results.json",
         "config/category_dict.json",
         "config/airline_callsign.json",
-        "src/nlp_analysis/postprocess.py",
+        "src/nlp_analysis/atlas.py",
         "src/dashboard/app.py"
     ]
     
