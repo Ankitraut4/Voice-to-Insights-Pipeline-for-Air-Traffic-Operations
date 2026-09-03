@@ -47,18 +47,18 @@ A comprehensive Streamlit dashboard for visualizing and analyzing live Air Traff
 
 ## Live Data Sources
 
-The dashboard automatically reads from:
+The dashboard reads from:
 - **Transcriptions**: `src/data/logs/transcripts/categorized_transcription_results.json`
 - **Communications**: `src/data/logs/atc_communications.txt`
 
-The dashboard updates every 5 seconds automatically!
+Both files are runtime-generated and may be absent before the first pipeline run.
 
 ## Dashboard Features
 
-- **Live Updates**: Automatically refreshes every 5 seconds
+- **Manual Refresh**: Use the sidebar **Refresh Data Now** button
+- **Browser Refresh**: You can also refresh the page with browser refresh (for example, F5)
 - **Real Data**: Uses actual transcription and communication log data
 - **Interactive Tabs**: Switch between different analysis views
-- **Manual Refresh**: Click refresh button for immediate updates
 
 ## Data Structure
 
@@ -73,7 +73,10 @@ The dashboard processes real ATC data:
 
 - **Framework**: Streamlit with Plotly for interactive charts
 - **Data Processing**: Pandas for analysis, NumPy for calculations
-- **Caching**: Uses `@st.cache_data` for optimal performance
+- **Caching**: Uses `@st.cache_data` and `@st.cache_resource`
+- **Current cache TTLs in `src/dashboard/app.py`**:
+  - Core file loaders use short TTLs (`ttl=3`)
+  - Some computed views/statistics use longer TTLs (`ttl=10` or `ttl=60`)
 - **Responsive**: Wide layout optimized for desktop viewing
 
 ## Future Enhancements
