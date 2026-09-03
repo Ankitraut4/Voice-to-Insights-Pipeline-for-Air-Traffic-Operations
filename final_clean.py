@@ -3,7 +3,8 @@ import json
 import re
 from pathlib import Path
 
-path = Path("/home/atc_voice/ATC-Voice/src/data/logs/transcripts/categorized_transcription_results.json")
+PROJECT_ROOT = Path(__file__).resolve().parent
+path = PROJECT_ROOT / "src" / "data" / "logs" / "transcripts" / "categorized_transcription_results.json"
 
 print("🧹 Cleaning categorized_transcription_results.json...")
 with open(path, "r", encoding="utf-8") as f:
