@@ -1,9 +1,12 @@
 import json
 import re
 import sys
+import argparse
 from pathlib import Path
 from typing import Dict, List, Any
 from difflib import get_close_matches
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 # ----------------------------- Utility Helpers ----------------------------- #
@@ -113,14 +116,17 @@ def detect_callsign(text: str, callsigns: Dict[str, str], phonetic_dict: Dict[st
 
 
 # ----------------------------- Main Logic ----------------------------- #
-def main(debug=False):
-    base_dir = Path("/Users/anushadusakanti/PycharmProjects/690Project")
+def main(input_path: Path, debug=False):
+    base_dir = PROJECT_ROOT
 
-    callsign_path = base_dir / "airline_callsign.json"
-    phonetic_path = base_dir / "phonetic_alphabet.json"
+    callsign_path = base_dir / "config" / "airline_callsign.json"
+    phonetic_path = base_dir / "config" / "phonetic_alphabet.json"
 
-    input_path = "/Users/anushadusakanti/Downloads/transcripts.json"
     output_path = base_dir / "airlinecount.json"
+
+    if not input_path.exists():
+        print(f"❌ Input file not found: {input_path}")
+        sys.exit(1)
 
     print("Loading dictionaries...")
     airline_callsigns = load_callsigns(callsign_path)
@@ -157,8 +163,17 @@ def main(debug=False):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Detect airline callsigns in transcripts.")
+    parser.add_argument(
+        "--input",
+        type=Path,
+        default=PROJECT_ROOT / "src" / "data" / "logs" / "transcripts" / "transcripts.json",
+        help="Path to input transcripts JSON file."
+    )
+    args = parser.parse_args()
+
     try:
-        main(debug=False)
+        main(input_path=args.input, debug=False)
     except KeyboardInterrupt:
         print("\nInterrupted.")
         sys.exit(130)
