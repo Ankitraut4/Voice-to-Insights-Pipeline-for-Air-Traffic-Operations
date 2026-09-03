@@ -20,7 +20,7 @@ Description=ATC Voice Live System
 After=network.target
 
 [Service]
-Type=forking
+Type=simple
 User=$SERVICE_USER
 WorkingDirectory=$PROJECT_ROOT
 ExecStart=$PROJECT_ROOT/run_live_system.sh

@@ -488,7 +488,7 @@ def append_categorized_data(new_items: List[Dict[str, Any]], output_path: Path,
             "last_updated_utc": new_items[-1].get("timestamp_utc", "") if new_items else "",
             "total_items": len(all_items),
             "duplicate_count": duplicate_count,
-            "unified_config": str(output_path.parent.parent.parent.parent / "config" / "final_aviation_ultimate_with_emergency.json")
+            "unified_config": str(PROJECT_ROOT / "config" / "final_aviation_ultimate_with_emergency.json")
         },
         "items": all_items
     }
