@@ -10,6 +10,13 @@ from difflib import SequenceMatcher
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "ATC_VOICE_ROOT",
+        Path(__file__).resolve().parents[2]
+    )
+).expanduser().resolve()
+
 
 # ----------------------------- Preprocessing ----------------------------- #
 def preprocess_transcript(text: str) -> str:
@@ -505,9 +512,9 @@ def flag_duplicates(items: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], 
 
 # ------------------------------ Path Setup ------------------------------ #
 def setup_paths():
-    """Setup directory paths for VM environment."""
-    # Base directory structure - use absolute path
-    base_dir = Path("/home/atc_voice/ATC-Voice")
+    """Set up paths relative to the project root."""
+    # Resolve paths from the portable project root
+    base_dir = PROJECT_ROOT
     
     # Dictionary files location
     config_dir = base_dir / "config"
@@ -585,7 +592,7 @@ def append_categorized_data(new_items: List[Dict[str, Any]], output_path: Path,
             "last_updated_utc": new_items[-1].get("timestamp_utc", "") if new_items else "",
             "total_items": len(all_items),
             "duplicate_count": duplicate_count,
-            "unified_config": str(output_path.parent.parent.parent.parent / "config" / "final_aviation_ultimate_with_emergency.json")
+            "unified_config": str(PROJECT_ROOT / "config" / "final_aviation_ultimate_with_emergency.json")
         },
         "items": all_items
     }

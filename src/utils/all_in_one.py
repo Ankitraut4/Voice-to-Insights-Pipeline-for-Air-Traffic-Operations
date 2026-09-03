@@ -177,48 +177,6 @@ class SlidingWindowAudioSplitter:
         print("✅ Sliding window recording completed!")
 
 
-# ============================================================================
-# POSTPROCESSING TRIGGER
-# ============================================================================
-
-def trigger_postprocessing():
-    """Trigger postprocessing of new transcriptions."""
-    try:
-        # Run postprocessing script silently
-        postprocess_script = Path("src/nlp_analysis/postprocess.py")
-        if postprocess_script.exists():
-            result = subprocess.run([
-                sys.executable, str(postprocess_script)
-            ], capture_output=True, text=True, timeout=60)
-            
-            if result.returncode == 0:
-                print("🔄 Postprocessing completed")
-            # Silent on warnings/errors to reduce noise
-        # Silent on errors to reduce noise
-            
-    except subprocess.TimeoutExpired:
-        print("⏰ Postprocessing timeout")
-    except Exception as e:
-        print(f"❌ Postprocessing error: {e}")
-
-
-def start_live_postprocessor():
-    """Start the live postprocessor in a separate thread."""
-    try:
-        print("🔄 Starting live postprocessor...")
-        postprocessor_script = Path("fast_live_postprocessor.py")
-        if postprocessor_script.exists():
-            # Start postprocessor in background thread
-            subprocess.Popen([
-                sys.executable, str(postprocessor_script)
-            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            print("✅ Live postprocessor started")
-        else:
-            print("⚠️ Live postprocessor script not found")
-    except Exception as e:
-        print(f"❌ Error starting live postprocessor: {e}")
-
-
 def start_dashboard():
     """Start the Streamlit dashboard in background."""
     try:
@@ -398,9 +356,6 @@ class TranscriptionEngine:
                 # Reduced verbosity - only show chunk number
                 print(f"🎯 Transcribed chunk {chunk_number}")
                 
-                # Trigger postprocessing in background
-                threading.Thread(target=trigger_postprocessing, daemon=True).start()
-                
             except Exception as e:
                 print(f"❌ Error transcribing {os.path.basename(filepath)}: {e}")
 
@@ -564,13 +519,9 @@ class UnifiedATCSystem:
         print("\n3️⃣  Initializing Transcription System...")
         print("✅ TRANSCRIPTION SYSTEM - READY")
         
-        print("\n4️⃣  Initializing Postprocessing System...")
-        start_live_postprocessor()
-        print("✅ POSTPROCESSING SYSTEM - READY")
-        
         # Start dashboard if requested
         if self.start_dashboard:
-            print("\n5️⃣  Initializing UI Render System...")
+            print("\n4️⃣  Initializing UI Render System...")
             start_dashboard()
             print("✅ UI RENDER SYSTEM - READY")
         
@@ -639,7 +590,7 @@ def main():
     CHUNK_DURATION = 30
     OVERLAP_DURATION = 5
     DURATION_MINUTES = None  # None = run indefinitely
-    START_DASHBOARD = True  # Set to True to start dashboard automatically
+    START_DASHBOARD = False  # Set to True to start dashboard automatically
     
     print("\n" + "=" * 80)
     print("  🎙️  ATC LIVE RECORDING & TRANSCRIPTION SYSTEM")

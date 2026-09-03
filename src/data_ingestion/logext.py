@@ -1,5 +1,6 @@
 import requests
 import io
+import os
 import numpy as np
 from pydub import AudioSegment
 from datetime import datetime
@@ -25,6 +26,13 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "ATC_VOICE_ROOT",
+        Path(__file__).resolve().parents[2]
+    )
+).expanduser().resolve()
+
 def format_file_size(size_bytes):
     """Convert file size from bytes to human readable format (KB, MB, etc.)."""
     for unit in ['bytes', 'KB', 'MB', 'GB', 'TB']:
@@ -34,14 +42,7 @@ def format_file_size(size_bytes):
     return f"{size_bytes:.1f} PB"
 
 def setup_log_file():
-    current_dir = Path.cwd()
-    if "ATC-Voice" in str(current_dir):
-        atc_voice_root = current_dir
-        while atc_voice_root.name != "ATC-Voice" and atc_voice_root.parent != atc_voice_root:
-            atc_voice_root = atc_voice_root.parent
-        log_dir = atc_voice_root / "src" / "data" / "logs"
-    else:
-        log_dir = Path("ATC-Voice/src/data/logs")
+    log_dir = PROJECT_ROOT / "src" / "data" / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     log_filename = "atc_communications.txt"
     log_filepath = log_dir / log_filename

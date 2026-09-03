@@ -86,10 +86,6 @@ cleanup_existing_processes() {
     # Kill any existing auto_cleaner.py processes
     pkill -f "python.*auto_cleaner.py" 2>/dev/null || true
     
-    # Kill any existing live_postprocessor.py processes
-    pkill -f "python.*live_postprocessor.py" 2>/dev/null || true
-    
-    
     # Kill any existing streamlit processes
     pkill -f "streamlit.*app.py" 2>/dev/null || true
     

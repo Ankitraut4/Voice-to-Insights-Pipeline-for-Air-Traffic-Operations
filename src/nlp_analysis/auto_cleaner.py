@@ -10,12 +10,20 @@ This script continuously monitors and cleans the JSON file to:
 """
 
 import json
+import os
 import re
 import time
 import sys
 from pathlib import Path
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "ATC_VOICE_ROOT",
+        Path(__file__).resolve().parents[2]
+    )
+).expanduser().resolve()
 
 
 class TranscriptionCleaner(FileSystemEventHandler):
@@ -222,7 +230,7 @@ def main():
     print("=" * 70)
     
     # Setup file path
-    base_dir = Path("/home/atc_voice/ATC-Voice")
+    base_dir = PROJECT_ROOT
     file_path = base_dir / "src" / "data" / "logs" / "transcripts" / "categorized_transcription_results.json"
     
     if not file_path.exists():

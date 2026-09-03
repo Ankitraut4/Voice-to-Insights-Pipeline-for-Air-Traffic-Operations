@@ -66,3 +66,16 @@ data/logs/
 *.pth
 *.pt
 *.onnx
+
+# Repository hygiene
+logs/
+*.log
+nohup.out
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.venv/
+venv/
+.idea/
+.vscode/

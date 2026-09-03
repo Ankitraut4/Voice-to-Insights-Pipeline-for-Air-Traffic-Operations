@@ -1,168 +1,203 @@
-# 🛫 Voice-to-Insights Pipeline for Air Traffic Operations
+# Voice-to-Insights Pipeline for Air Traffic Operations
 
-## 📌 Project Overview
-A full-stack analytics platform that transforms air traffic control (ATC) voice communications into searchable transcripts and real-time operational insights. The system ingests audio data, processes it through a modular backend pipeline, and presents structured analytics via an interactive dashboard designed for fast operational review and monitoring.
+## 1) Project Overview
 
-This project emphasizes software engineering fundamentals: clean architecture, modular pipelines, reliability, and end-to-end ownership from ingestion to UI.
+This repository is a modular prototype for turning ATC voice/transcription streams into structured, searchable operational insights.
 
-<img width="1613" height="812" alt="image" src="https://github.com/user-attachments/assets/f876c232-bd39-477b-ac7d-d5b78e5f695c" />
+The focus is practical engineering: ingest communications, normalize noisy transcripts, detect callsigns, classify message intent, and surface results in an interactive analytics dashboard.
 
----
+This is a pipeline-style implementation, not a production-scale distributed platform.
 
-## Architecture Overview
+## 2) Processing Flow
 
-The system is implemented as a multi-stage processing pipeline with clear separation of concerns:
+1. **Audio / communication ingestion**
+   - `src/data_ingestion/logext.py` monitors a LiveATC stream and detects communication activity from audio levels.
+   - Runtime communication detections are appended to `src/data/logs/atc_communications.txt` (generated at runtime, git-ignored, and potentially absent before first run).
+2. **Transcript normalization**
+   - `src/nlp_analysis/atlas.py` and `src/nlp_analysis/postprocess.py` normalize punctuation/noise and convert ATC spoken numbers.
+3. **Callsign detection**
+   - Detects commercial aliases plus general-aviation N-numbers (direct and "november ..." forms).
+4. **Communication categorization**
+   - Rule-based categorization using canonical keyword/callsign config.
+   - Includes emergency false-positive gating for ambiguous "emergency" references.
+5. **Structured JSON output**
+   - Writes categorized transcript records to `src/data/logs/transcripts/categorized_transcription_results.json` (generated at runtime and potentially absent before first run).
+   - Supports incremental append behavior and atomic temp-file replacement in processing code.
+6. **Streamlit analytics dashboard**
+   - `src/dashboard/app.py` reads categorized transcripts + communication logs and renders operational metrics/visualizations.
 
-- Audio Sources
-  - Live or recorded ATC audio inputs
+## 3) Key Engineering Features
 
-- Ingestion Layer
-  - File and stream ingestion
-  - Input validation and buffering
+- Bounded audio buffering in stream ingestion.
+- Silence/communication detection via dBFS thresholding.
+- Reconnection with exponential backoff for stream errors.
+- ATC-specific spoken-number normalization.
+- Commercial + general-aviation callsign detection.
+- Emergency-context gating to reduce false-positive emergency labels.
+- Incremental transcript processing with duplicate tracking and atomic output writes.
+- Portable project-root resolution in core scripts with `ATC_VOICE_ROOT` override.
+- Automated pytest coverage for deterministic normalization/callsign/categorization behaviors.
 
-- Preprocessing Layer
-  - Audio normalization
-  - Segmentation and cleanup
+## 4) Actual Repository Structure
 
-- Transcription Service
-  - Pluggable speech-to-text backends
-  - Fault-tolerant execution and retries
-
-- Analysis & Categorization
-  - Event classification (handoffs, clearances, emergencies)
-  - Pattern and trend extraction
-
-- Data Store
-  - Structured transcripts
-  - Aggregated metrics and analytics outputs
-
-- Dashboard UI
-  - Search and filtering
-  - Timelines and analytical views
-  - Operational summaries and insights
-
-
-
-## 🎯 Objectives
-- Ingest and process **ATC audio recordings** (e.g., LiveATC streams).  
-- Apply **Speech-to-Text (STT)** models such as Whisper, Vosk, or Azure Speech SDK.  
-- Perform **NLP analysis** (keyword spotting, call sign detection, anomaly detection).  
-- Develop a **real-time dashboard** to visualize:
-  - Transcripts
-  - Communication timelines
-  - Flight activity summaries
-  - Alerts/anomalies
-
----
-
-## 🏗️ Repository Structure
-atc-voice-dashboard/
-│── README.md
-
-│── .gitignore
-
-│── requirements.txt # Python dependencies
-
-│── src/ 
-
-│ ├── data_ingestion/ # Scripts to fetch/stream ATC audio (LiveATC, etc.)
-
-│ ├── preprocessing/ # Audio cleaning, segmentation
-
-│ ├── speech_to_text/ # STT pipeline (Whisper, Vosk, or Azure Speech SDK)
-
-│ ├── nlp_analysis/ # Keyword spotting, topic modeling, anomaly detection
-
-│ ├── dashboard/ # Streamlit app for visualization
-│ │   └── app.py
-│ ├── pipeline/  # Simple, stable API for processing modules (re-exports)
-│ └── utils/ # Helper functions (logging, config)
-
-│── notebooks/ # Jupyter/EDA experiments
-
-│── data/ # Sample data (small clips, transcripts)
-
-│── tests/ # Unit tests
-
-│── docs/ # Project docs & capstone deliverables
-
-<img width="1600" height="743" alt="image" src="https://github.com/user-attachments/assets/62aee6d4-9218-4c20-8aba-78dab7d6946a" />
----
-
-## ⚙️ Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/<your-username>/atc-voice-dashboard.git
-   cd atc-voice-dashboard
-   
-## Create a virtual environment & activate it:
-
-python3 -m venv venv
-source venv/bin/activate   # On macOS/Linux
-
-venv\Scripts\activate      # On Windows
-
-
-## 🧰 Tech Stack
-
-Programming: Python
-
-Audio Processing: pydub, librosa (TBD)
-
-Speech-to-Text: OpenAI Whisper / Vosk / Azure Speech SDK (TBD)
-
-NLP: Hugging Face Transformers, spaCy (TBD)
-
-Dashboard: Streamlit
-
-Data Handling: Pandas, NumPy
-
-Optional Deployment: Docker (TBD)
-
-## 🚀 Quick Start
-
-**Run the dashboard with your existing data:**
-```bash
-./run_dashboard_simple.sh
+```text
+.
+├── README.md
+├── LIVE_SYSTEM_README.md
+├── requirements.txt
+├── requirements-dev.txt
+├── run_dashboard.sh
+├── run_live_system.sh
+├── run_postprocessing_pipeline.py
+├── install_as_service.sh
+├── final_clean.py
+├── repair_json.py
+├── live_postprocessor.py
+├── start_live.sh
+├── stop_live.sh
+├── stop_atlas_and_cleaner.sh
+├── config/
+│   ├── final_aviation_ultimate_with_emergency.json
+│   ├── category_dict.json
+│   ├── airline_callsign.json
+│   ├── phonetic_alphabet.json
+│   ├── airline_nnumbers.json
+├── src/
+│   ├── data_ingestion/
+│   │   └── logext.py
+│   ├── nlp_analysis/
+│   │   ├── atlas.py
+│   │   ├── postprocess.py
+│   │   └── auto_cleaner.py
+│   ├── dashboard/
+│   │   ├── app.py
+│   │   └── README.md
+│   └── utils/
+│       ├── all_in_one.py
+│       ├── airline_count.py
+│       ├── pair_timeinterval_atc.py
+│       ├── map.jpeg
+│       ├── ZNYHighAltitudeCharts.jpg
+└── tests/
+    ├── test_transcript_processing.py
+    ├── test_callsign_detection.py
+    └── test_categorization.py
 ```
 
-This will:
-- ✅ Use your existing transcription data (`categorized_transcription_results.json`)
-- ✅ Use your existing communication logs (`atc_communications.txt`)
-- ✅ Display live analytics and visualizations
-- ✅ Show all requested features: categorization, daily counts, statistics, patterns
+## 5) Installation
 
-**Or manually:**
 ```bash
-# Activate virtual environment
+python -m venv venv
+```
+
+Linux/macOS:
+```bash
 source venv/bin/activate
-
-# Install dependencies if needed
-pip install streamlit pandas numpy plotly
-
-# Run dashboard
-streamlit run src/dashboard/app.py
 ```
 
-**Access:** http://localhost:8501
+Windows (PowerShell):
+```powershell
+venv\Scripts\Activate.ps1
+```
 
-## 📊 Dashboard Features
+Install runtime dependencies:
 
-The dashboard displays:
-- **Communication Categorization**: Frequency handoffs, heading vectors, altitude clearances, emergency declarations, miscellaneous
-- **Daily Analytics**: Communication counts, statistics, trends
-- **Category Analysis**: Distribution charts and breakdowns
-- **Pattern Analysis**: Hourly patterns, flight activity, timing analysis
-- **Live Data**: Reads from your existing data files automatically
+```bash
+pip install -r requirements.txt
+```
 
-<img width="1475" height="432" alt="image" src="https://github.com/user-attachments/assets/2033c42b-2e62-47e5-81d8-a1b18a84954f" />
-<img width="1460" height="810" alt="image" src="https://github.com/user-attachments/assets/b93a4327-ce2f-403c-9ce8-44cf534f9017" />
-<img width="1686" height="852" alt="image" src="https://github.com/user-attachments/assets/c6237e0b-2373-453b-ac32-57125d4b8adc" />
-<img width="1708" height="725" alt="image" src="https://github.com/user-attachments/assets/5b0b030f-fbcb-4e30-8f65-4abf4275c06e" />
+Optional developer dependencies:
 
+```bash
+pip install -r requirements-dev.txt
+```
 
-## 📜 License
+## 6) Running
 
-This project is released under the Apache 2.0 License unless otherwise specified by the partner.
+### Dashboard only
+
+Linux-oriented helper script:
+```bash
+./run_dashboard.sh
+```
+
+Direct Python entrypoint:
+```bash
+python -m streamlit run src/dashboard/app.py
+```
+
+### Postprocessing pipeline + dashboard launcher
+
+```bash
+python run_postprocessing_pipeline.py
+```
+
+This runs transcript categorization and then starts Streamlit.
+
+### NLP categorization engine
+
+One-time pass:
+```bash
+python src/nlp_analysis/atlas.py
+```
+
+Live monitoring mode:
+```bash
+python src/nlp_analysis/atlas.py --live
+```
+
+### Linux live-system orchestration scripts
+
+```bash
+./run_live_system.sh
+./start_live.sh
+./stop_live.sh
+./install_as_service.sh
+```
+
+These scripts are Linux/systemd-oriented and rely on tools such as `bash`, `pkill`, `lsof`, and `systemctl`.
+
+## 7) Testing
+
+Run tests:
+
+```bash
+python -m pytest -v
+```
+
+Current focused suite: **13 tests** across transcript processing, callsign detection, and categorization.
+
+## 8) Configuration
+
+Canonical configuration files in `config/` used by current processing/dashboard code:
+
+- `config/final_aviation_ultimate_with_emergency.json`
+- `config/category_dict.json`
+- `config/airline_callsign.json`
+- `config/phonetic_alphabet.json`
+- `config/airline_nnumbers.json`
+
+Portable path resolution:
+
+- Core scripts support `ATC_VOICE_ROOT` to override project-root discovery.
+- If unset, scripts fall back to deriving the root from script location.
+
+Runtime artifacts:
+
+- Runtime-generated logs/data are intentionally ignored by Git via `.gitignore` rules (for example `logs/`, `*.log`, `src/data/logs/` paths).
+
+## 9) Limitations
+
+- Categorization is primarily rule-based and regex-driven.
+- Persistence is file/JSON-based rather than database/event-backed.
+- End-to-end behavior depends on external audio/transcription tooling and stream availability.
+- Dashboard and processing logic still have partial coupling through shared data files and duplicated helper logic.
+- Linux orchestration/service scripts are not portable to all environments without adaptation.
+
+## 10) Future Improvements
+
+- Move from JSON files to database/event-backed persistence.
+- Consolidate shared domain logic (normalization, callsign parsing, categorization helpers) into reusable modules.
+- Add broader integration and pipeline-level tests beyond the current focused unit suite.
+- Improve deployment ergonomics with stronger containerization/runtime profiles.
 

@@ -6,21 +6,28 @@ echo "======================================================================"
 echo "🚀 Installing ATC Voice as System Service"
 echo "======================================================================"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${ATC_VOICE_ROOT:-$SCRIPT_DIR}"
+SERVICE_USER="${ATC_SERVICE_USER:-${SUDO_USER:-$USER}}"
+
+# Ensure log directory exists for service output
+mkdir -p "$PROJECT_ROOT/logs"
+
 # Create systemd service file
-sudo tee /etc/systemd/system/atc-voice.service << 'EOF'
+sudo tee /etc/systemd/system/atc-voice.service << EOF
 [Unit]
 Description=ATC Voice Live System
 After=network.target
 
 [Service]
-Type=forking
-User=stanjore
-WorkingDirectory=/home/atc_voice/ATC-Voice
-ExecStart=/home/atc_voice/ATC-Voice/run_live_system.sh
+Type=simple
+User=$SERVICE_USER
+WorkingDirectory=$PROJECT_ROOT
+ExecStart=$PROJECT_ROOT/run_live_system.sh
 Restart=on-failure
 RestartSec=10
-StandardOutput=append:/home/atc_voice/ATC-Voice/logs/service.log
-StandardError=append:/home/atc_voice/ATC-Voice/logs/service.log
+StandardOutput=append:$PROJECT_ROOT/logs/service.log
+StandardError=append:$PROJECT_ROOT/logs/service.log
 
 [Install]
 WantedBy=multi-user.target

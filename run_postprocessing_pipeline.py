@@ -13,6 +13,13 @@ import time
 import os
 from pathlib import Path
 
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "ATC_VOICE_ROOT",
+        Path(__file__).resolve().parent
+    )
+).expanduser().resolve()
+
 def run_postprocessing():
     """Run the postprocessing script on transcripts.json"""
     print("🔄 Running postprocessing on transcripts.json...")
@@ -22,7 +29,7 @@ def run_postprocessing():
         result = subprocess.run([
             sys.executable, 
             "src/nlp_analysis/atlas.py"
-        ], cwd="/home/atc_voice/ATC-Voice", capture_output=True, text=True)
+        ], cwd=PROJECT_ROOT, capture_output=True, text=True)
         
         if result.returncode == 0:
             print("✅ Postprocessing completed successfully!")
@@ -45,12 +52,14 @@ def start_dashboard():
     try:
         # Start dashboard in background
         dashboard_process = subprocess.Popen([
-            "/home/stanjore/.local/bin/streamlit", 
+            sys.executable,
+            "-m",
+            "streamlit",
             "run", 
             "src/dashboard/app.py",
             "--server.port", "8501",
             "--server.address", "0.0.0.0"
-        ], cwd="/home/atc_voice/ATC-Voice")
+        ], cwd=PROJECT_ROOT)
         
         print("✅ Dashboard started!")
         print("🌐 Dashboard URL: http://localhost:8501")
@@ -64,14 +73,14 @@ def start_dashboard():
 
 def check_files():
     """Check if required files exist"""
-    base_dir = Path("/home/atc_voice/ATC-Voice")
+    base_dir = PROJECT_ROOT
     
     files_to_check = [
         "src/data/logs/transcripts/transcripts.json",
         "src/data/logs/transcripts/categorized_transcription_results.json",
         "config/category_dict.json",
         "config/airline_callsign.json",
-        "src/nlp_analysis/postprocess.py",
+        "src/nlp_analysis/atlas.py",
         "src/dashboard/app.py"
     ]
     
@@ -97,8 +106,8 @@ def show_file_stats():
     """Show statistics about the data files"""
     print("\n📊 Data File Statistics:")
     
-    transcripts_file = Path("/home/atc_voice/ATC-Voice/src/data/logs/transcripts/transcripts.json")
-    categorized_file = Path("/home/atc_voice/ATC-Voice/src/data/logs/transcripts/categorized_transcription_results.json")
+    transcripts_file = PROJECT_ROOT / "src" / "data" / "logs" / "transcripts" / "transcripts.json"
+    categorized_file = PROJECT_ROOT / "src" / "data" / "logs" / "transcripts" / "categorized_transcription_results.json"
     
     if transcripts_file.exists():
         size_mb = transcripts_file.stat().st_size / (1024 * 1024)

@@ -10,6 +10,13 @@ from difflib import SequenceMatcher
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "ATC_VOICE_ROOT",
+        Path(__file__).resolve().parents[2]
+    )
+).expanduser().resolve()
+
 
 # ----------------------------- Preprocessing ----------------------------- #
 def preprocess_transcript(text: str) -> str:
@@ -202,15 +209,22 @@ def detect_callsign(text: str, callsigns: dict) -> str:
     if not text:
         return "Unknown"
     t = preprocess_transcript(text)
+    text_upper = text.upper()
+
+    # Check direct GA N-numbers before airline alias matching.
+    direct_match = re.search(r"\bN\d{1,5}[A-Z]{0,2}\b", text_upper)
+    if direct_match:
+        return f"General Aviation ({direct_match.group(0)})"
     
     # Try exact matches with word boundaries
     for alias, airline in callsigns.items():
         if re.search(rf"\b{re.escape(alias.lower())}\b", t):
             return airline
     
-    # Try substring matches for callsigns
+    # Fallback: allow token-like alias+digits patterns (e.g., "delta123"),
+    # but avoid matching aliases inside unrelated words.
     for alias, airline in callsigns.items():
-        if alias.lower() in t:
+        if re.search(rf"\b{re.escape(alias.lower())}\d+\b", t):
             return airline
     
     return "Unknown"
@@ -226,6 +240,40 @@ def categorize_communication(text: str, category_keywords: dict, fuzzy_threshold
     # Remove punctuation for matching
     text_clean = text_lower.translate(str.maketrans('', '', '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'))
     
+    # Helper: stricter emergency gating
+    def _is_true_emergency(t: str) -> bool:
+        # Strong positive patterns
+        positive_patterns = [
+            r"\bmayday\b",
+            r"\bpan(?:\s+pan){1,2}\b",
+            r"\bdeclaring (an )?emergency\b",
+            r"\bmedical emergency\b",
+            r"\bfuel emergency\b",
+            r"\bsquawk(?:ing)?\s*7700\b",
+            r"\bengine (?:failure|out)\b",
+            r"\bsmoke (?:in|on)\b",
+            r"\bfire (?:on board|in (?:cabin|cockpit))\b",
+            r"\bpriority (?:landing|handling)\b",
+            r"\bunabl[e]? to maintain altitude\b",
+            r"\blost communications\b"
+        ]
+        for pat in positive_patterns:
+            if re.search(pat, t):
+                return True
+        # If only the token 'emergency' appears, require supporting context
+        if re.search(r"\bemergency\b", t):
+            # Likely misrecognition cases: 'emergency' followed by numbers/flight-like tokens
+            if re.search(r"\bemergency\s+[a-zA-Z]*\d+", t):
+                return False
+            # Greetings + 'emergency' without declarative verbs
+            if re.search(r"\b(good (afternoon|morning|evening)\s+)?emergency\b", t) and not re.search(r"\b(declare|declaring|mayday|pan)\b", t):
+                return False
+            # Require at least one supporting keyword if "emergency" is present
+            if not re.search(r"\b(declare|declaring|request|need|medical|fuel|priority|mayday|pan|7700|squawk)\b", t):
+                return False
+            return True
+        return False
+
     # Separate "Miscellaneous" from other categories to check it last
     other_categories = {k: v for k, v in category_keywords.items() if k.lower() != "miscellaneous"}
     misc_keywords = category_keywords.get("Miscellaneous", [])
@@ -238,6 +286,10 @@ def categorize_communication(text: str, category_keywords: dict, fuzzy_threshold
             
             # Check if keyword appears in text
             if kw_clean in text_clean:
+                # Harden emergency detection: avoid false positives on a lone "emergency"
+                if category.lower() == "emergency declarations":
+                    if not _is_true_emergency(text_lower):
+                        continue  # skip emergency category if not strongly supported
                 return category
     
     # Then check Miscellaneous category if it exists
@@ -322,6 +374,10 @@ def is_valid_transcription(text: str) -> bool:
     if text_words and all(word in ['thank', 'you', 'very', 'much'] for word in text_words):
         return False
     
+    # Remove any transcription containing these gratitude expressions anywhere in the text
+    if 'thank you' in text_lower or 'thanks' in text_lower or re.search(r'\bthank\b', text_lower):
+        return False
+
     # Check for excessive Chinese/Japanese characters (transcription artifacts)
     chinese_chars = sum(1 for c in text if '\u4e00' <= c <= '\u9fff' or '\u3040' <= c <= '\u309f' or '\u30a0' <= c <= '\u30ff')
     if chinese_chars > len(text) * 0.5:  # More than 50% Chinese/Japanese characters
@@ -353,9 +409,9 @@ def flag_duplicates(items: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], 
 
 # ------------------------------ Path Setup ------------------------------ #
 def setup_paths():
-    """Setup directory paths for VM environment."""
-    # Base directory structure - use absolute path
-    base_dir = Path("/home/atc_voice/ATC-Voice")
+    """Set up paths relative to the project root."""
+    # Resolve paths from the portable project root
+    base_dir = PROJECT_ROOT
     
     # Dictionary files location
     config_dir = base_dir / "config"
@@ -432,7 +488,7 @@ def append_categorized_data(new_items: List[Dict[str, Any]], output_path: Path,
             "last_updated_utc": new_items[-1].get("timestamp_utc", "") if new_items else "",
             "total_items": len(all_items),
             "duplicate_count": duplicate_count,
-            "unified_config": str(output_path.parent.parent.parent.parent / "config" / "final_aviation_ultimate_with_emergency.json")
+            "unified_config": str(PROJECT_ROOT / "config" / "final_aviation_ultimate_with_emergency.json")
         },
         "items": all_items
     }
