@@ -28,8 +28,8 @@ st.set_page_config(
 BASE_DIR = Path(".")
 TRANSCRIPTIONS_FILE = BASE_DIR / "src" / "data" / "logs" / "transcripts" / "categorized_transcription_results.json"
 COMMUNICATIONS_FILE = BASE_DIR / "src" / "data" / "logs" / "atc_communications.txt"
-AIRLINE_CALLSIGN_FILE = BASE_DIR / "config" / "airline_callsign (2).json"
-PHONETIC_ALPHABET_FILE = BASE_DIR / "config" / "phonetic_alphabet (1).json"
+AIRLINE_CALLSIGN_FILE = BASE_DIR / "config" / "airline_callsign.json"
+PHONETIC_ALPHABET_FILE = BASE_DIR / "config" / "phonetic_alphabet.json"
 AIRLINE_NNUMBERS_FILE = BASE_DIR / "config" / "airline_nnumbers.json"
 
 # ----------------------------- Airline Detection Logic ----------------------------- #
