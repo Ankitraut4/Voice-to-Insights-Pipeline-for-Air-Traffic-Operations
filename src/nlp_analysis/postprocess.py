@@ -209,15 +209,22 @@ def detect_callsign(text: str, callsigns: dict) -> str:
     if not text:
         return "Unknown"
     t = preprocess_transcript(text)
+    text_upper = text.upper()
+
+    # Check direct GA N-numbers before airline alias matching.
+    direct_match = re.search(r"\bN\d{1,5}[A-Z]{0,2}\b", text_upper)
+    if direct_match:
+        return f"General Aviation ({direct_match.group(0)})"
     
     # Try exact matches with word boundaries
     for alias, airline in callsigns.items():
         if re.search(rf"\b{re.escape(alias.lower())}\b", t):
             return airline
     
-    # Try substring matches for callsigns
+    # Fallback: allow token-like alias+digits patterns (e.g., "delta123"),
+    # but avoid matching aliases inside unrelated words.
     for alias, airline in callsigns.items():
-        if alias.lower() in t:
+        if re.search(rf"\b{re.escape(alias.lower())}\d+\b", t):
             return airline
     
     return "Unknown"

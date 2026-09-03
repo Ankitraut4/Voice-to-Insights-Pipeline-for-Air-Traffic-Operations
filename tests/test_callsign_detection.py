@@ -27,6 +27,12 @@ def test_general_aviation_direct_n_number_detection():
     assert detected == "General Aviation (N123AB)"
 
 
+def test_postprocess_general_aviation_direct_n_number_detection():
+    callsigns = postprocess.load_callsigns(CALLSIGN_PATH)
+    detected = postprocess.detect_callsign("N123AB request landing", callsigns)
+    assert detected == "General Aviation (N123AB)"
+
+
 def test_general_aviation_november_phonetic_detection():
     callsigns = atlas.load_callsigns(CALLSIGN_PATH)
     phonetic = atlas.load_phonetic_alphabet(PHONETIC_PATH)
