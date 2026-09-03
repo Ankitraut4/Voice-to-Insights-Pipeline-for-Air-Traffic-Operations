@@ -10,6 +10,13 @@ from difflib import SequenceMatcher
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+PROJECT_ROOT = Path(
+    os.environ.get(
+        "ATC_VOICE_ROOT",
+        Path(__file__).resolve().parents[2]
+    )
+).expanduser().resolve()
+
 
 # ----------------------------- Preprocessing ----------------------------- #
 def preprocess_transcript(text: str) -> str:
@@ -353,9 +360,9 @@ def flag_duplicates(items: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], 
 
 # ------------------------------ Path Setup ------------------------------ #
 def setup_paths():
-    """Setup directory paths for VM environment."""
-    # Base directory structure - use absolute path
-    base_dir = Path("/home/atc_voice/ATC-Voice")
+    """Set up paths relative to the project root."""
+    # Resolve paths from the portable project root
+    base_dir = PROJECT_ROOT
     
     # Dictionary files location
     config_dir = base_dir / "config"
